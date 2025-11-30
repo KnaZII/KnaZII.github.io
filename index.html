@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KnaZII bio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #3b8eea;
+            --secondary-color: #00c3ff;
+            --bg-overlay: rgba(5, 10, 20, 0.85);
+            --text-white: #e0eaff;
+            --text-dim: #566981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-white);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #000000;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        #bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            pointer-events: none;
+        }
+
+        .terminal-window {
+            background: var(--bg-overlay);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            width: 95%;
+            max-width: 850px;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(59, 142, 234, 0.15);
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .bg-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .bg-toggle-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(59, 142, 234, 0.3);
+        }
+
+        .prompt-line {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #1e2a3a;
+            padding-bottom: 10px;
+            padding-right: 100px;
+        }
+
+        .prompt-user {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .prompt-host {
+            color: var(--text-white);
+        }
+
+        .prompt-path {
+            color: var(--secondary-color);
+        }
+
+        .fetch-container {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .logo-section {
+            flex-shrink: 0;
+        }
+
+        .ascii-art-img {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 5px;
+            box-shadow: 8px 8px 0px rgba(59, 142, 234, 0.3);
+            filter: grayscale(20%) contrast(110%);
+        }
+
+        .info-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .fetch-line {
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            display: flex;
+        }
+
+        .key {
+            color: var(--primary-color);
+            font-weight: bold;
+            width: 110px;
+            flex-shrink: 0;
+        }
+
+        .value {
+            color: var(--text-white);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .value a {
+            color: var(--text-white);
+            text-decoration: none;
+            border-bottom: 1px solid var(--text-dim);
+            transition: 0.3s;
+        }
+
+        .value a:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .links-row {
+            margin-top: 25px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .social-icon {
+            color: #889bb3;
+            font-size: 1.3rem;
+            transition: transform 0.2s, color 0.3s;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            color: var(--secondary-color);
+        }
+
+        .color-blocks {
+            margin-top: 30px;
+            display: flex;
+        }
+
+        .block {
+            width: 25px;
+            height: 12px;
+            margin-right: 4px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 700px) {
+            .fetch-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .key {
+                width: auto;
+                margin-right: 8px;
+            }
+
+            .key::after {
+                content: ":";
+            }
+
+            .ascii-art-img {
+                width: 160px;
+                height: 160px;
+                margin-bottom: 15px;
+            }
+
+            .bg-toggle-btn {
+                position: static;
+                display: block;
+                margin: 0 auto 15px auto;
+                width: fit-content;
+            }
+
+            .prompt-line {
+                padding-right: 0;
+                text-align: center;
+            }
+
+            .terminal-window {
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+
+            .links-row,
+            .color-blocks {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <video id="bg-video" loop>
+        <source src="default.mp4" type="video/mp4">
+    </video>
+
+    <div class="terminal-window">
+        <button id="toggle-bg" class="bg-toggle-btn">
+            <i class="fa-solid fa-play"></i> VIDEO MODE
+        </button>
+
+        <div class="prompt-line">
+            <span class="prompt-user">KnaZII</span><span class="prompt-host">@Windows11</span>:<span
+                class="prompt-path">~</span>$ fastfetch
+        </div>
+
+        <div class="fetch-container">
+            <div class="logo-section">
+                <img src="pic.jpg" alt="logo" class="ascii-art-img">
+            </div>
+
+            <div class="info-section">
+                <div class="fetch-line" style="margin-bottom: 12px;">
+                    <span style="color: var(--primary-color); font-weight: 800;">KnaZII</span>
+                    <span style="color: var(--text-dim);">@</span>
+                    <span style="color: var(--text-white); font-weight: 800;">PridArch</span>
+                </div>
+
+                <div style="width: 100%; height: 1px; background: #1e2a3a; margin-bottom: 15px;"></div>
+
+                <div class="fetch-line"><span class="key">OS</span><span class="value">Windows 11 + PridArch</span></div>
+                <div class="fetch-line"><span class="key">Host</span><span class="value">Altai, Russia</span></div>
+                <div class="fetch-line"><span class="key">Uptime</span><span class="value">14 years</span></div>
+                <div class="fetch-line"><span class="key">Role</span><span class="value">Kotlin, C, C++, Assembler</span>
+                </div>
+                <div class="fetch-line"><span class="key">Langs</span><span class="value">ru, en</span></div>
+
+                <div class="fetch-line" style="margin-top: 8px;">
+                    <span class="key">Folder</span>
+                    <span class="value">
+                        PridCompromat
+                    </span>
+                </div>
+
+                <div class="links-row">
+                    <a href="https://github.com/KnaZII" target="_blank" class="social-icon"><i
+                            class="fa-brands fa-github"></i></a>
+                    <a href="https://t.me/KnaZISY" target="_blank" class="social-icon"><i
+                            class="fa-brands fa-telegram"></i></a>
+                    <a href="https://github.com/KnaZII" target="_blank" class="social-icon"><i
+                            class="fa-brands fa-discord"></i></a>
+                </div>
+
+                <div class="color-blocks">
+                    <div class="block" style="background: #1a1b26;"></div>
+                    <div class="block" style="background: #f7768e;"></div>
+                    <div class="block" style="background: #9ece6a;"></div>
+                    <div class="block" style="background: #e0af68;"></div>
+                    <div class="block" style="background: #3b8eea;"></div>
+                    <div class="block" style="background: #bb9af7;"></div>
+                    <div class="block" style="background: #7dcfff;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const particleCount = 70;
+        const connectionDistance = 120;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b8eea';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(59, 142, 234, ${1 - distance / connectionDistance})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        const btn = document.getElementById('toggle-bg');
+        const video = document.getElementById('bg-video');
+        let isVideoMode = false;
+
+        btn.addEventListener('click', () => {
+            if (!isVideoMode) {
+                
+                video.volume = 0.02;
+                video.play();
+                video.style.opacity = '1';
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i> PAUSE VIDEO';
+                isVideoMode = true;
+            } else {
+                video.style.opacity = '0';
+                setTimeout(() => { video.pause(); }, 800);
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> VIDEO MODE';
+                isVideoMode = false;
+            }
+        });
+    </script>
+</body>
+
+
+</html>
